@@ -22,3 +22,9 @@ button {
         font-size: 14px;
     }
 }
+
+#lineContainer {
+    width: 100%;
+    height: 80vh;
+    border: none;
+}
