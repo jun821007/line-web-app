@@ -13,8 +13,40 @@
         <div id="lineContainer" style="display: none;">
             <!-- 模拟 LINE 界面 -->
             <div id="lineContent">
-                <h2>Welcome to LINE Web App</h2>
-                <p>This is a simulated LINE interface.</p>
+                <div id="chatWindow">
+                    <div class="message received">Hello! This is a simulated LINE interface.</div>
+                </div>
+                <div id="messageInputContainer">
+                    <input type="text" id="messageInput" placeholder="Type a message...">
+                    <button id="sendMessage">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>LINE Web App</h1>
+        <button id="openWindow">Open LINE</button>
+        <div id="lineContainer" style="display: none;">
+            <!-- 模拟 LINE 界面 -->
+            <div id="lineContent">
+                <div id="chatWindow">
+                    <div class="message received">Hello! This is a simulated LINE interface.</div>
+                </div>
+                <div id="messageInputContainer">
+                    <input type="text" id="messageInput" placeholder="Type a message...">
+                    <button id="sendMessage">Send</button>
+                </div>
             </div>
         </div>
     </div>
