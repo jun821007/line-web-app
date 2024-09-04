@@ -1,6 +1,14 @@
-document.getElementById("openWindow").addEventListener("click", function() {
-    // 显示嵌入的 LINE 界面
+document.getElementById("qrLogin").addEventListener("click", function() {
+    // 显示二维码登录界面
+    var qrCodeContainer = document.getElementById("qrCodeContainer");
+    qrCodeContainer.style.display = "block";
+});
+
+document.getElementById("qrCodeContainer").addEventListener("click", function() {
+    // 模拟登录成功，显示 LINE 界面
+    var loginContainer = document.getElementById("loginContainer");
     var lineContainer = document.getElementById("lineContainer");
+    loginContainer.style.display = "none";
     lineContainer.style.display = "block";
 });
 
