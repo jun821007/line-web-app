@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LINE Extension</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    button { padding: 10px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>LINE Extension</h1>
+  <button id="openLine">Open LINE</button>
+  <button id="getQRCode">Get QR Code</button>
+  <button id="getAuthCode">Get Auth Code</button>
+  <button id="getChatHistory">Get Chat History</button>
+  <div id="qrCodeContainer" style="display: none;">
+    <img id="qrCodeImage" src="" alt="QR Code">
+  </div>
+  <div id="authCodeContainer" style="display: none;">
+    <p id="authCode"></p>
+  </div>
+  <div id="chatHistoryContainer" style="display: none;">
+    <ul id="chatHistory"></ul>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
