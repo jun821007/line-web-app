@@ -1,13 +1,6 @@
-document.getElementById("openWindow").addEventListener("click", async function() {
-    // 模拟打开新窗口的功能
-    alert("Opening new window...");
-    // 在实际应用中，你可以使用 window.open() 打开新窗口
-    // window.open("https://line.me", "_blank", "width=800,height=580");
-});
-
-document.getElementById("openWindow").addEventListener("touchstart", async function() {
-    // 模拟打开新窗口的功能
-    alert("Opening new window...");
+document.getElementById("openWindow").addEventListener("click", function() {
+    // 打开新窗口并加载指定的 URL
+    window.open("https://line.me", "_blank", "width=800,height=580");
 });
 
 // 模拟删除旧数据的功能
