@@ -10,7 +10,7 @@
 import os
 import sys
 import json
-import base64
+import time
 import tempfile
 from datetime import datetime
 from selenium import webdriver
@@ -90,10 +90,37 @@ def create_chrome_driver():
     return webdriver.Chrome(options=opts)
 
 
-def capture_page_png(driver, url):
+def capture_full_page_screenshots(driver, url, viewport_height=900, scroll_pause=1.5, max_screenshots=20):
+    """
+    捲動整頁並擷取多張截圖，確保長頁面也能抓完整。
+    回傳截圖 PNG bytes 的 list。
+    """
     driver.get(url)
     driver.implicitly_wait(5)
-    return driver.get_screenshot_as_png()
+    time.sleep(2)  # 等頁面穩定
+
+    # 取得整頁高度
+    total_height = driver.execute_script(
+        "return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+    )
+
+    screenshots = []
+    current_position = 0
+
+    while current_position < total_height and len(screenshots) < max_screenshots:
+        driver.execute_script(f"window.scrollTo(0, {current_position});")
+        time.sleep(scroll_pause)  # 等 lazy load
+        png = driver.get_screenshot_as_png()
+        screenshots.append(png)
+        current_position += viewport_height
+
+    # 最後確保捲到底（若還沒超過上限）
+    if len(screenshots) < max_screenshots:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(scroll_pause)
+        screenshots.append(driver.get_screenshot_as_png())
+
+    return screenshots
 
 
 def extract_prices_from_image(model, image_bytes, source_name, source_url):
@@ -135,6 +162,18 @@ def extract_prices_from_image(model, image_bytes, source_name, source_url):
         return []
 
 
+def deduplicate_rows(rows):
+    """同一盤商、同一型號、同一價格只保留一筆"""
+    seen = set()
+    result = []
+    for row in rows:
+        key = (row[0], row[2], row[3])  # 盤商, 型號, 價格
+        if key not in seen:
+            seen.add(key)
+            result.append(row)
+    return result
+
+
 def ensure_headers(ws):
     """確保試算表有正確抬頭"""
     row1 = ws.row_values(1)
@@ -167,10 +206,16 @@ def main():
                 continue
             print(f"擷取: {name} - {url[:50]}...")
             try:
-                png = capture_page_png(driver, url)
-                rows = extract_prices_from_image(model, png, name, url)
-                all_rows.extend(rows)
-                print(f"  -> 辨識到 {len(rows)} 筆")
+                screenshots = capture_full_page_screenshots(driver, url)
+                dealer_rows = []
+                for i, png in enumerate(screenshots):
+                    rows = extract_prices_from_image(model, png, name, url)
+                    dealer_rows.extend(rows)
+                    if rows:
+                        print(f"  [區塊 {i+1}/{len(screenshots)}] 辨識到 {len(rows)} 筆")
+                dealer_rows = deduplicate_rows(dealer_rows)
+                all_rows.extend(dealer_rows)
+                print(f"  -> 合計 {len(dealer_rows)} 筆（已去重）")
             except Exception as e:
                 print(f"  [錯誤] {e}")
     finally:
