@@ -25,9 +25,10 @@ jobs:
 
       - name: 安裝套件
         run: |
-          pip install google-generativeai gspread oauth2client selenium
-
+pip install google-generativeai gspread google-auth selenium
       - name: 執行爬蟲
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+                     GSPREAD_CREDENTIALS_JSON: ${{ secrets.GSPREAD_CREDENTIALS_JSON }}
+           TARGET_URLS_JSON: ${{ secrets.TARGET_URLS_JSON }}
         run: python scraper.py
