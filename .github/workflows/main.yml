@@ -26,7 +26,6 @@ jobs:
       - name: 安裝套件
         run: |
           pip install google-generativeai gspread google-auth selenium
-
       - name: 執行爬蟲
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
