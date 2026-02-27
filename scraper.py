@@ -21,7 +21,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # ========== 設定 ==========
-SPREADSHEET_ID = "10b-8mfcjpTvuAT8MBxbvOEe9q6_LRXUwSlJeZl13_0E"
+SPREADSHEET_ID = "10b-8mfcjpTvuAT8MBxbvOEe9q6_LRXUwSlJeZI13_0E"
 WORKSHEET_NAME = "新機總表"
 HEADERS = ["盤商", "盤商網頁", "型號", "顏色", "價格", "最後更新時間"]
 
