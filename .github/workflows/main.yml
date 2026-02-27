@@ -1,9 +1,9 @@
- name: 每日自動更新報價單
-   
-   on:
-     schedule:
-       - cron: '0 5 * * *'
-     workflow_dispatch:
+name: 每日自動更新報價單
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
 
 jobs:
   run-scraper:
