@@ -1,5 +1,4 @@
-
-   name: 每日自動更新報價單
+ name: 每日自動更新報價單
    
    on:
      schedule:
