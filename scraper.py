@@ -21,9 +21,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # ========== 設定 ==========
-SPREADSHEET_ID = "1EBmhc6YKZBuwnASCPorrRjvdsHWf7IPASr3-ZJ5DuAM"
+SPREADSHEET_ID = "10b-8mfcjpTvuAT8MBxbvOEe9q6_LRXUwSlJeZl13_0E"
 WORKSHEET_NAME = "新機總表"
-HEADERS = ["盤商", "盤商網頁", "型號", "價格", "最後更新時間"]
+HEADERS = ["盤商", "盤商網頁", "型號", "顏色", "價格", "最後更新時間"]
 
 # 盤商網址：格式 [{"name": "盤商名稱", "url": "https://..."}]
 # 可透過環境變數 TARGET_URLS_JSON 覆蓋（JSON 字串）
@@ -124,10 +124,11 @@ def capture_full_page_screenshots(driver, url, viewport_height=900, scroll_pause
 
 
 def extract_prices_from_image(model, image_bytes, source_name, source_url):
-    """用 Gemini 從截圖辨識型號與價格"""
-    prompt = """這是一張盤商報價單截圖。請從圖片中辨識「型號」與「價格」。
-回傳格式必須是 JSON 陣列，每個元素為 {"model": "型號", "price": 數字}。
-範例: [{"model": "iPhone 16 128G", "price": 28500}, {"model": "iPhone 16 Pro 256G", "price": 36500}]
+    """用 Gemini 從截圖辨識型號、顏色與價格"""
+    prompt = """這是一張盤商報價單截圖。請從圖片中辨識「型號」、「顏色」與「價格」。
+顏色若有請填入，若報價單中該欄無顏色資訊則填空字串。
+回傳格式必須是 JSON 陣列，每個元素為 {"model": "型號", "color": "顏色", "price": 數字}。
+範例: [{"model": "iPhone 17 Pro 256G", "color": "藍色", "price": 37500}, {"model": "iPhone 17 Pro 256G", "color": "銀色", "price": 37500}]
 若無法辨識或圖中無報價，回傳 []。只回傳 JSON，不要其他說明。"""
 
     img_part = {
@@ -149,13 +150,14 @@ def extract_prices_from_image(model, image_bytes, source_name, source_url):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         for item in data:
             m = item.get("model") or item.get("型號") or ""
+            c = item.get("color") or item.get("顏色") or ""
             p = item.get("price") or item.get("價格") or 0
             try:
                 p = int(p)
             except (TypeError, ValueError):
                 p = 0
             if m:
-                rows.append([source_name, source_url, str(m), p, now])
+                rows.append([source_name, source_url, str(m), str(c), p, now])
         return rows
     except Exception as e:
         print(f"  [Gemini] 辨識失敗: {e}")
@@ -163,11 +165,11 @@ def extract_prices_from_image(model, image_bytes, source_name, source_url):
 
 
 def deduplicate_rows(rows):
-    """同一盤商、同一型號、同一價格只保留一筆"""
+    """同一盤商、同一型號、同一顏色、同一價格只保留一筆"""
     seen = set()
     result = []
     for row in rows:
-        key = (row[0], row[2], row[3])  # 盤商, 型號, 價格
+        key = (row[0], row[2], row[3], row[4])  # 盤商, 型號, 顏色, 價格
         if key not in seen:
             seen.add(key)
             result.append(row)
@@ -178,7 +180,7 @@ def ensure_headers(ws):
     """確保試算表有正確抬頭"""
     row1 = ws.row_values(1)
     if row1 != HEADERS:
-        ws.update("A1:E1", [HEADERS])
+        ws.update("A1:F1", [HEADERS])
 
 
 def main():
