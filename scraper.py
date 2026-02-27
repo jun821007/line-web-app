@@ -32,7 +32,7 @@ DEFAULT_TARGET_URLS = [
 ]
 
 # 依 API 實際查詢：此 Key 支援 gemini-2.5-pro（1.5 系列不支援）
-GEMINI_MODEL = "gemini-2.5-pro"
+GEMINI_MODEL = "gemini-2.0-flash"
 
 
 def get_target_urls():
@@ -126,7 +126,10 @@ def capture_full_page_screenshots(driver, url, viewport_height=900, scroll_pause
 def extract_prices_from_image(model, image_bytes, source_name, source_url):
     """用 Gemini 從截圖辨識型號、顏色與價格"""
     prompt = """這是一張盤商報價單截圖。請從圖片中辨識「型號」、「顏色」與「價格」。
-顏色若有請填入，若報價單中該欄無顏色資訊則填空字串。
+規則：
+1. 顏色若有請填入，若報價單中該欄無顏色資訊則填空字串。
+2. 若該商品文字顏色明顯較淺（灰色、半透明、淡色），代表缺貨，請略過不要回傳。
+3. 只回傳有貨（文字清晰、顏色正常）的商品。
 回傳格式必須是 JSON 陣列，每個元素為 {"model": "型號", "color": "顏色", "price": 數字}。
 範例: [{"model": "iPhone 17 Pro 256G", "color": "藍色", "price": 37500}, {"model": "iPhone 17 Pro 256G", "color": "銀色", "price": 37500}]
 若無法辨識或圖中無報價，回傳 []。只回傳 JSON，不要其他說明。"""
