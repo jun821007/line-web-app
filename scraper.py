@@ -23,6 +23,7 @@ from google.oauth2.service_account import Credentials
 # ========== 設定 ==========
 SPREADSHEET_ID = "10b-8mfcjpTvuAT8MBxbvOEe9q6_LRXUwSlJeZI13_0E"
 WORKSHEET_NAME = "新機總表"
+SUMMARY_WORKSHEET_NAME = "整理後報表"
 HEADERS = ["盤商", "盤商網頁", "型號", "顏色", "價格", "最後更新時間"]
 
 # 盤商網址：格式 [{"name": "盤商名稱", "url": "https://..."}]
@@ -186,6 +187,67 @@ def ensure_headers(ws):
         ws.update("A1:F1", [HEADERS])
 
 
+def build_summary(sh, all_rows):
+    """
+    將原始資料整理成 pivot 報表，寫入「整理後報表」分頁。
+    欄位：型號 | 顏色 | 盤商A | 盤商B | ... | 最低價 | 最低盤商 | 更新時間
+    """
+    if not all_rows:
+        return
+
+    # 取得所有盤商（依出現順序，去重）
+    dealers = []
+    for row in all_rows:
+        d = row[0]
+        if d not in dealers:
+            dealers.append(d)
+
+    # pivot：key = (型號, 顏色)，value = {盤商: 價格}
+    pivot = {}
+    update_time = ""
+    for row in all_rows:
+        dealer, _, model, color, price, ts = row[0], row[1], row[2], row[3], row[4], row[5]
+        key = (model, color)
+        if key not in pivot:
+            pivot[key] = {}
+        # 同一盤商同型號取最低價
+        if dealer not in pivot[key] or price < pivot[key][dealer]:
+            pivot[key][dealer] = price
+        if not update_time and ts:
+            update_time = ts
+
+    # 建立標題列
+    header = ["型號", "顏色"] + dealers + ["最低價", "最低盤商", "更新時間"]
+
+    # 建立資料列，依型號排序
+    data_rows = []
+    for (model, color), dealer_prices in sorted(pivot.items()):
+        row = [model, color]
+        prices_with_dealer = []
+        for d in dealers:
+            p = dealer_prices.get(d, "")
+            row.append(p)
+            if p != "":
+                prices_with_dealer.append((p, d))
+        if prices_with_dealer:
+            min_price, min_dealer = min(prices_with_dealer, key=lambda x: x[0])
+        else:
+            min_price, min_dealer = "", ""
+        row += [min_price, min_dealer, update_time]
+        data_rows.append(row)
+
+    # 取得或建立分頁
+    try:
+        ws = sh.worksheet(SUMMARY_WORKSHEET_NAME)
+    except gspread.exceptions.WorksheetNotFound:
+        ws = sh.add_worksheet(title=SUMMARY_WORKSHEET_NAME, rows=5000, cols=50)
+
+    # 清空再寫入
+    ws.clear()
+    ws.append_rows([header] + data_rows, value_input_option="USER_ENTERED")
+    print(f"✅ 整理後報表已寫入 {len(data_rows)} 筆（共 {len(dealers)} 間盤商）")
+
+
 def main():
     print("=== 盤商每日價格爬蟲 ===")
     target_urls = get_target_urls()
@@ -228,8 +290,15 @@ def main():
             driver.quit()
 
     if all_rows:
+        # 清空舊資料（保留第一列標題），再寫入當天資料
+        ws.clear()
+        ensure_headers(ws)
         ws.append_rows(all_rows, value_input_option="USER_ENTERED")
         print(f"✅ 已寫入 {len(all_rows)} 筆至試算表「{WORKSHEET_NAME}」")
+
+        # 整理成 pivot 報表
+        print("=== 開始整理報表 ===")
+        build_summary(sh, all_rows)
     else:
         print("⚠ 未辨識到任何價格資料")
 
